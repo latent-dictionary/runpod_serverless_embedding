@@ -13,7 +13,7 @@ def handler(event: dict[str, Any]):
         event["input"]
     )
     resp = embedding_service.embed_texts(validated_request)
-    return resp
+    return resp.model_dump()
 
 
 # Start the Serverless function when the script is run
