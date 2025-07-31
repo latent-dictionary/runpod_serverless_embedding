@@ -1,0 +1,2 @@
+DEFAULT_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"
+DEFAULT_RERANKER_MODEL = "Qwen/Qwen3-Reranker-0.6B"
