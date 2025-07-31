@@ -23,7 +23,7 @@ def embed_texts(
 ) -> embedding_models.OpenAITextEmbeddingResponse:
     model = get_embedder_model(request.model)
 
-    embeddings = model.encode(request.input)
+    embeddings = model.encode(request.input, convert_to_numpy=True)
 
     return embedding_models.OpenAITextEmbeddingResponse(
         data=embeddings_to_objects(embeddings),
