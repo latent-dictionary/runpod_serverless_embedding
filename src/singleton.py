@@ -10,7 +10,20 @@ _reranker_model_bag: dict[str, CrossEncoder] | None = None
 logger = logging.getLogger(__name__)
 
 
-def init_sentence_transformers_models(load_default_models: bool = True) -> None:
+def grab_best_device() -> str:
+    best_device = "cpu"
+    if torch.backends.mps.is_available():
+        best_device = "mps"
+
+    if torch.cuda.is_available():
+        best_device = "cuda"
+
+    return best_device
+
+
+def init_sentence_transformers_models(
+    load_default_embedder: bool = True, load_default_reranker: bool = False
+) -> None:
     global _embedder_model_bag
     global _reranker_model_bag
 
@@ -20,9 +33,9 @@ def init_sentence_transformers_models(load_default_models: bool = True) -> None:
     if _reranker_model_bag is None:
         _reranker_model_bag = {}
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = grab_best_device()
 
-    if load_default_models:
+    if load_default_embedder:
         logger.info(f"loading default embedder: {DEFAULT_EMBEDDING_MODEL}")
         default_embedder = SentenceTransformer(
             model_name_or_path=DEFAULT_EMBEDDING_MODEL, device=device
@@ -30,6 +43,7 @@ def init_sentence_transformers_models(load_default_models: bool = True) -> None:
 
         _embedder_model_bag[DEFAULT_EMBEDDING_MODEL] = default_embedder
 
+    if load_default_reranker:
         logger.info(f"loading default reranker {DEFAULT_RERANKER_MODEL}")
         default_reranker = CrossEncoder(
             model_name_or_path=DEFAULT_RERANKER_MODEL, device=device
@@ -47,7 +61,8 @@ def get_embedder_model(model_name: str) -> SentenceTransformer:
     if model:
         return model
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = grab_best_device()
+
     if device == "cpu":
         logger.warning("not found GPU, using CPU device for inference")
 

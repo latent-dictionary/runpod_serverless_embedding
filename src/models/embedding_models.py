@@ -33,11 +33,8 @@ class EmbeddingUsage(BaseModel):
 
 
 class OpenAITextEmbeddingResponse(BaseModel):
-    embeddings: list[EmbeddingVector] = Field(
-        description="list of list of float (2D array) as embedding vectors"
-    )
+    data: list[OpenAIEmbeddingObject]
 
     object: str = Field(default="list")
-    data: list[OpenAIEmbeddingObject]
     model: str = Field(description="model name that generated the embeddings")
     usage: EmbeddingUsage
