@@ -1,3 +1,4 @@
 # worker
 
-start API server: python your_handler.py --rp_serve_api
+start API server
+python src/handler.py --rp_serve_api

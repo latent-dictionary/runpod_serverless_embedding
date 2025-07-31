@@ -1,7 +1,7 @@
 import runpod
 from typing import Any
 
-# from models import embedding_models
+from models import embedding_models
 from services import embedding_service
 
 from singleton import init_sentence_transformers_models
@@ -9,8 +9,10 @@ from singleton import init_sentence_transformers_models
 
 # --- The RunPod Handler ---
 def handler(event: dict[str, Any]):
-    request = event["input"]
-    resp = embedding_service.embed_texts(request)
+    validated_request = embedding_models.OpenAITextEmbeddingRequest.model_validate(
+        event["input"]
+    )
+    resp = embedding_service.embed_texts(validated_request)
     return resp
 
 
