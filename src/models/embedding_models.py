@@ -14,7 +14,7 @@ class OpenAITextEmbeddingRequest(BaseModel):
     input: list[str] | str = Field(
         default_factory=list, description="input texts to embed"
     )
-    model: str = Field(
+    model_name: str = Field(
         default=TextEmbeddingModel.QwenEmbedderSmall, description="model name"
     )
 
@@ -37,4 +37,5 @@ class OpenAITextEmbeddingResponse(BaseModel):
 
     object: str = Field(default="list")
     model: str = Field(description="model name that generated the embeddings")
-    usage: EmbeddingUsage
+    usage: EmbeddingUsage = Field(default_factory=EmbeddingUsage)
+    error: str | None = Field(default=None)

@@ -21,12 +21,12 @@ def embeddings_to_objects(
 def embed_texts(
     request: embedding_models.OpenAITextEmbeddingRequest,
 ) -> embedding_models.OpenAITextEmbeddingResponse:
-    model = get_embedder_model(request.model)
+    model = get_embedder_model(request.model_name)
 
     embeddings = model.encode(request.input, convert_to_numpy=True)
     return embedding_models.OpenAITextEmbeddingResponse(
         data=embeddings_to_objects(embeddings),
-        model=request.model,
+        model=request.model_name,
         usage=embedding_models.EmbeddingUsage(
             prompt_tokens=0, total_tokens=0
         ),  # just dummy data
