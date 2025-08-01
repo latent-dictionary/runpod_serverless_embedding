@@ -1,6 +1,7 @@
 import torch
 import logging
 
+from transformers import AutoTokenizer
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from config import DEFAULT_EMBEDDING_MODEL, DEFAULT_RERANKER_MODEL
 
@@ -83,7 +84,13 @@ def get_reranking_model(model_name: str | None) -> CrossEncoder:
         logger.warning("not found GPU, using CPU device for inference")
 
     try:
-        model = CrossEncoder(model_name_or_path=model_name, device=device)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = CrossEncoder(
+            model_name_or_path=model_name,
+            device=device,
+        )
+        model.config.pad_token_id = tokenizer.pad_token_id
+
     except Exception as e:
         raise RuntimeError(
             f"something went wrong when loading embedding model {model_name}, {e}"
