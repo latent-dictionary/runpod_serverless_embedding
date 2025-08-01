@@ -18,8 +18,6 @@ def handler(event: dict[str, Any]):
 
 # Start the Serverless function when the script is run
 if __name__ == "__main__":
-    init_sentence_transformers_models(
-        load_default_embedder=True, load_default_reranker=True
-    )
+    init_sentence_transformers_models()
 
     runpod.serverless.start({"handler": handler})
