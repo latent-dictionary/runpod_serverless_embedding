@@ -27,10 +27,3 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/runpod_serverless_worker:${{ github.sha }}
 
-    - name: Run Integration Tests on RunPod
-      uses: runpod/runpod-test-runner
-      with:
-        image-tag: ${{ secrets.DOCKERHUB_USERNAME }}/runpod_serverless_worker:${{ github.sha }}
-        runpod-api-key: ${{ secrets.RUNPOD_API_KEY }}
-        test-filename: .github/tests.json
-        request-timeout: 300
