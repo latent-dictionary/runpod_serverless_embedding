@@ -4,6 +4,11 @@ import logging
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from config import DEFAULT_EMBEDDING_MODEL, DEFAULT_RERANKER_MODEL
 
+LOCAL_DEFAULT_EMBEDDING_MODEL_PATH = f"/app/models/{DEFAULT_EMBEDDING_MODEL}".replace(
+    "/", "-"
+)
+LOCAL_DEFAULT_RERANKER_MODEL = f"/app/models/{DEFAULT_RERANKER_MODEL}".replace("/", "-")
+
 _embedder_model_bag: dict[str, SentenceTransformer] | None = None
 _reranker_model_bag: dict[str, CrossEncoder] | None = None
 
@@ -38,7 +43,7 @@ def init_sentence_transformers_models(
     if load_default_embedder:
         logger.info(f"loading default embedder: {DEFAULT_EMBEDDING_MODEL}")
         default_embedder = SentenceTransformer(
-            model_name_or_path=DEFAULT_EMBEDDING_MODEL, device=device
+            model_name_or_path=LOCAL_DEFAULT_EMBEDDING_MODEL_PATH, device=device
         )
 
         _embedder_model_bag[DEFAULT_EMBEDDING_MODEL] = default_embedder
@@ -46,7 +51,7 @@ def init_sentence_transformers_models(
     if load_default_reranker:
         logger.info(f"loading default reranker {DEFAULT_RERANKER_MODEL}")
         default_reranker = CrossEncoder(
-            model_name_or_path=DEFAULT_RERANKER_MODEL, device=device
+            model_name_or_path=LOCAL_DEFAULT_RERANKER_MODEL, device=device
         )
 
         _reranker_model_bag[DEFAULT_RERANKER_MODEL] = default_reranker
