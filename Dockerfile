@@ -1,73 +1,72 @@
 # -----------------------------------------------------------------------------
 # Phase 1: The "Builder" Stage
-# We use a larger 'devel' image here that has all the build tools we need.
+# Use a full 'devel' image with build tools.
 # -----------------------------------------------------------------------------
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04 AS builder
 
-# Set the Hugging Face home to a directory we can cache during builds if needed.
-# This ENV is not strictly needed in the builder but is good practice.
-ENV HF_HOME=/root/.cache/huggingface
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies and Python.
-# Using DEBIAN_FRONTEND=noninteractive prevents prompts during installation.
+# Install system dependencies, Python, and crucially, the venv module.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 \
+    python3.11-venv \ 
     python3-pip \
     git \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Link python3.11 to python for convenience
+# Link python3.11 and pip3 to default 'python' and 'pip' commands
 RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
     ln -sf /usr/bin/pip3 /usr/bin/pip
 
 # Install uv, the fast package installer
-RUN pip install uv
+RUN pip install --no-cache-dir uv
 
-# Create a virtual environment in a standard location. This is key for isolation.
+# Create the virtual environment. This will now succeed.
 RUN python -m venv /opt/venv
 
-# Activate the venv for subsequent RUN commands
+# Activate the venv for all subsequent RUN commands in this stage
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy just the requirements file first to leverage Docker's layer cache.
+# Copy requirements file first to leverage Docker's layer cache
 COPY requirements.txt .
 
-# Install dependencies from requirements.txt using uv.
-# We exclude torch here to install it separately and specifically.
-RUN uv pip install --no-cache -r requirements.txt --system
+# Install dependencies from requirements.txt using uv
+# As discussed, torch should not be in this file.
+RUN uv pip install --no-cache-dir -r requirements.txt
 
-# NOW, install the specific torch version that works for you.
-# This preserves the exact command from your working file.
-RUN pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/test/cu124 --no-cache-dir
+# Install the specific torch version that you confirmed works
+RUN pip install --no-cache-dir torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/test/cu124
 
 
 # -----------------------------------------------------------------------------
 # Phase 2: The "Final" Runtime Stage
-# We use the much smaller 'runtime' image for our final product.
+# Start fresh from the smaller 'runtime' image.
 # -----------------------------------------------------------------------------
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
-# Set the RunPod persistent volume for model caching (your excellent optimization)
+# Set the RunPod persistent volume for model caching
 ENV HF_HOME=/runpod-volume
 
-# Install only the essential runtime system dependencies.
+# Install only the absolute essential runtime system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 \
     libgl1 \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/bin/python3.11 /usr/bin/python
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy the entire virtual environment with all its installed packages from the builder stage.
+# Link python for consistency
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python
+
+# Copy the entire virtual environment with all its installed packages from the builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Copy the application source code into a dedicated 'app' directory.
+# Copy the application source code into a dedicated 'app' directory
 COPY ./src /app
 WORKDIR /app
 
-# Ensure the PATH includes our virtual environment's executables.
+# Set the PATH to use the virtual environment's executables in the final container
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Set the command to run your application handler.
-# The -u flag is important for unbuffered logging in containers.
+# Set the command to run your application handler with unbuffered output
 CMD ["python", "-u", "handler.py"]
